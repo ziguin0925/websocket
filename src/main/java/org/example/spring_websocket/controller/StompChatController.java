@@ -1,10 +1,14 @@
 package org.example.spring_websocket.controller;
 
 
+import java.security.Principal;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.example.spring_websocket.dtos.ChatMessage;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 @Slf4j
@@ -16,9 +20,10 @@ public class StompChatController {
      * */
     @MessageMapping("/chats")
     @SendTo("/sub/chats") // 해당 경로를 구독하는 클라이언트 들에게 메세지를 전송한다.
-    public String handleMessage(@Payload String message) {
-        log.info("{} receives", message);
+    public ChatMessage handleMessage(@AuthenticationPrincipal Principal principal, @Payload Map<String, String> payload){
 
-        return message;
+        log.info("{} sent {} ",principal.getName(), payload);
+
+        return new ChatMessage(principal.getName(), payload.get("message"));
     }
 }
