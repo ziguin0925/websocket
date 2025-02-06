@@ -5,6 +5,7 @@ import java.security.Principal;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.example.spring_websocket.dtos.ChatMessage;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.handler.annotation.SendTo;
@@ -18,11 +19,14 @@ public class StompChatController {
     /**
      *  "/pub/chat"으로 발행 된 메세지들이 들어옴.(StompConfiguration)
      * */
-    @MessageMapping("/chats")
-    @SendTo("/sub/chats") // 해당 경로를 구독하는 클라이언트 들에게 메세지를 전송한다.
-    public ChatMessage handleMessage(@AuthenticationPrincipal Principal principal, @Payload Map<String, String> payload){
+    @MessageMapping("/chats/{chatroomId}")
+    @SendTo("/sub/chats/{chatroomId}") // 해당 경로를 구독하는 클라이언트 들에게 메세지를 전송한다.
+    public ChatMessage handleMessage(@AuthenticationPrincipal Principal principal,
+                                     @Payload Map<String, String> payload,
+                                     @DestinationVariable Long chatroomId
+    ){
 
-        log.info("{} sent {} ",principal.getName(), payload);
+        log.info("{} sent {} in {}",principal.getName(), payload, chatroomId);
 
         return new ChatMessage(principal.getName(), payload.get("message"));
     }

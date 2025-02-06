@@ -2,6 +2,7 @@ package org.example.spring_websocket.controller;
 
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.spring_websocket.dtos.ChatRoomDto;
 import org.example.spring_websocket.entity.ChatRoom;
 import org.example.spring_websocket.service.ChatService;
 import org.example.spring_websocket.vo.CustomOAuth2User;
@@ -25,8 +26,11 @@ public class ChatController {
      * 채팅방 생성
      * */
     @PostMapping
-    public ChatRoom createChatRoom(@AuthenticationPrincipal CustomOAuth2User user, @RequestParam String title) {
-        return chatService.createChatRoom(user.getUser(), title);
+    public ChatRoomDto createChatRoom(@AuthenticationPrincipal CustomOAuth2User user, @RequestParam String title) {
+
+        ChatRoom chatRoom = chatService.createChatRoom(user.getUser(), title);
+
+        return ChatRoomDto.from(chatRoom);
     }
 
     /**
@@ -49,7 +53,8 @@ public class ChatController {
      * 채팅방 목록 조회
      * */
     @GetMapping
-    public List<ChatRoom> getChatRoomList(@AuthenticationPrincipal CustomOAuth2User user) {
+    public List<ChatRoomDto> getChatRoomList(@AuthenticationPrincipal CustomOAuth2User user) {
+
         return chatService.getChatRoomsList(user.getUser());
     }
 

@@ -3,6 +3,7 @@ package org.example.spring_websocket.service;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.spring_websocket.dtos.ChatRoomDto;
 import org.example.spring_websocket.entity.ChatRoom;
 import org.example.spring_websocket.entity.User;
 import org.example.spring_websocket.entity.UserChatRoomMapping;
@@ -29,10 +30,7 @@ public class ChatService {
 
         chatRoom = chatRoomRepository.save(chatRoom);
 
-        UserChatRoomMapping userChatRoomMapping = UserChatRoomMapping.builder()
-                .user(user)
-                .chatRoom(chatRoom)
-                .build();
+        UserChatRoomMapping userChatRoomMapping = chatRoom.addUser(user);
 
         userChatRoomMapping = userChatRoomMappingRepository.save(userChatRoomMapping);
 
@@ -80,12 +78,13 @@ public class ChatService {
     /**
      * 해당 유저가 참여한 채팅방 리스트 반환.
      * */
-    public List<ChatRoom> getChatRoomsList(User user){
+    public List<ChatRoomDto> getChatRoomsList(User user){
         // 맵핑 엔티티를 통해 간접적으로 조회
         List<UserChatRoomMapping> userChatRoomMappingList = userChatRoomMappingRepository.findAllByUserId(user.getId());
 
         return userChatRoomMappingList.stream()
                 .map(UserChatRoomMapping::getChatRoom)
+                .map(ChatRoomDto::from)
                 .toList();
     }
 }

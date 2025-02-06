@@ -3,6 +3,7 @@ const stompClient = new StompJs.Client({
 });
 
 stompClient.onConnect = (frame) => {
+  showChatrooms(); // 사용자가 참여한 채팅방 목록 표시.
   setConnected(true);
   console.log('Connected: ' + frame);
 
@@ -21,7 +22,7 @@ stompClient.onStompError = (frame) => {
 function setConnected(connected) {
   $("#connect").prop("disabled", connected);
   $("#disconnect").prop("disabled", !connected);
-  $("#create").prop("disabled", connected);
+  $("#create").prop("disabled", !connected);
 }
 
 function connect() {
@@ -56,7 +57,7 @@ function createChatroom(){
   $.ajax({ // ajax요청
     type: 'POST',
     dataType: "json",
-    url: "/chats?title=" + $("#chatroom-title").val,
+    url: "/chats?title=" + $("#chatroom-title").val(),
 
     success: function (data) { // 성공시
       console.log("data : ", data);
@@ -94,7 +95,7 @@ function renderChatrooms(chatrooms){
 
   for(let i=0; i<chatrooms.length; i++){ // chatroom-list 태그에 아래의 html을 더해준다.
     $("#chatroom-list").append(
-        "<tr onclick='joinChatroom(" + chatrooms[i].id + ")'>"
+        "<tr onclick='joinChatroom(" + chatrooms[i].id + ")'><td>"
         + chatrooms[i].id + "</td><td>" + chatrooms[i].title + "</td><td>"// 채팅방 id와 채팅방 title을 표시.
         + chatrooms[i].memberCount + "</td><td>" + chatrooms[i].createAt
         + "</td></tr>"
@@ -102,22 +103,24 @@ function renderChatrooms(chatrooms){
   }
 }
 // 채팅방에 대해서 subscribe와 publish를 해준다.
-let subcsription;
+let subscription;
 
 function enterChatrooms(chatroomId, newMember){
   $("#chatroom-id").val(chatroomId); // 사용자가 수정할 수 없는 텍스트 박스의 chatroom id를 넣는다.
+  $("#messages").html(""); // 옮기기 전 채팅방의 메세지 내역을 지운다.
   $("#conversation").show();
   $("#send").prop("disabled", false);
   $("#leave").prop("disabled", false);
+  console.log("subscription : ", subscription);
 
   // 채팅방에서 다른 채팅방으로 넘어가는 경우.
-  if(subcsription != undefined){
+  if(subscription !== undefined){
      subscription.unsubscribe();
   }
 
 
   // 특정 채팅방에 대해서 구독
-  subcsription = stompClient.subscribe('/sub/chats/' + chatroomId, (chatMessage) => {
+  subscription = stompClient.subscribe('/sub/chats/' + chatroomId, (chatMessage) => {
     showMessage(JSON.parse(chatMessage.body));
   });
 
@@ -139,7 +142,7 @@ function joinChatroom(chatroomId){
     dataType: 'json',
     url: "/chats/"+chatroomId,
     success: function(data){
-      console.log('data : ', data);
+      console.log('join chatroom data : ', data);
       enterChatrooms(chatroomId, data);
     },
     error: function(request, status, error) {
@@ -151,7 +154,7 @@ function joinChatroom(chatroomId){
 
 // 해당 채팅방을 나가는 경우.
 function leaveChatroom(){
-  let chatroomId = $("chatroom-id").val(); // 현재 채팅방의 id
+  let chatroomId = $("#chatroom-id").val(); // 현재 채팅방의 id
   $.ajax({
     type:'DELETE',
     dataType: 'json',
